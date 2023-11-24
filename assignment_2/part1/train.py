@@ -341,4 +341,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     kwargs = vars(args)
+    print(f"Training the model with the following configuration\n:{kwargs}")
     main(**kwargs)

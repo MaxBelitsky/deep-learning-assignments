@@ -33,6 +33,28 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+    try:
+        if torch.backends.mps.is_available():
+            torch.mps.manual_seed(seed)
+    except:
+        pass
+
+
+def set_device():
+    """
+    Function for setting the device.
+    """
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+
+    try:
+        if torch.backends.mps.is_available():
+            device = torch.device('mps')
+    except:
+        device = torch.device('cpu')
+    return device
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -125,4 +147,4 @@ def save_checkpoint(state, args, is_best=False, filename="checkpoint.pth.tar"):
         print("saved best file")
 
 class DummyArgs:
-    pass
+  pass

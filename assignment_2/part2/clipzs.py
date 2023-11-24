@@ -28,7 +28,7 @@ from torchvision.datasets import CIFAR10, CIFAR100
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torch.nn as nn
-from utils import AverageMeter, set_seed
+from utils import AverageMeter, set_seed, set_device
 
 
 DATASET = {"cifar10": CIFAR10, "cifar100": CIFAR100}
@@ -95,7 +95,7 @@ def parse_option():
     )
 
     args = parser.parse_args()
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = set_device()
 
     return args
 
@@ -155,8 +155,6 @@ class ZeroshotCLIP(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
 
-        # TODO: Implement the precompute_text_features function.
-
         # Instructions:
         # - Given a list of prompts, compute the text features for each prompt.
 
@@ -166,12 +164,17 @@ class ZeroshotCLIP(nn.Module):
         # - Normalize the text features.
         # - Return a tensor of shape (num_prompts, 512).
 
-        # Hint:
-        # - Read the CLIP API documentation for more details:
-        #   https://github.com/openai/CLIP#api
+        # Tokenize each text prompt using CLIP's tokenizer
+        tokenized_text = torch.cat([clip.tokenize(p) for p in prompts]).to(device)
 
-        # remove this line once you implement the function
-        raise NotImplementedError("Implement the precompute_text_features function.")
+        # Compute the text features (encodings) for each prompt.
+        with torch.no_grad():
+            text_features = clip_model.encode_text(tokenized_text)
+
+        # Normalize the text features.
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+        
+        return text_features
 
         #######################
         # END OF YOUR CODE    #
@@ -205,12 +208,17 @@ class ZeroshotCLIP(nn.Module):
         #   You need to multiply the similarity logits with the logit scale (clip_model.logit_scale).
         # - Return logits of shape (batch size, number of classes).
 
-        # Hint:
-        # - Read the CLIP API documentation for more details:
-        #   https://github.com/openai/CLIP#api
+        # Compute the image features (encodings) using the CLIP model.
+        with torch.no_grad():
+            image_features = self.clip_model.encode_image(image)
 
-        # remove this line once you implement the function
-        raise NotImplementedError("Implement the model_inference function.")
+        # Normalize the image features.
+        image_features /= image_features.norm(dim=-1, keepdim=True)
+
+        # Compute similarity logits between the image features and the text features.
+        similarity_logits = self.logit_scale * (image_features @ self.text_features.T)
+
+        return similarity_logits
 
         #######################
         # END OF YOUR CODE    #
@@ -366,13 +374,23 @@ def main():
     # - For each image in the batch, get the predicted class
     # - Update the accuracy meter
 
+    for imgs, labels in tqdm(loader):
+        # Transfer images to device
+        imgs = imgs.to(device)
+        
+        # Compute logits
+        logits = clipzs.model_inference(imgs).cpu()
+
+        # Compute and update the accuracy
+        batch_size = labels.shape[0]
+        true_preds = (logits.argmax(dim=-1) == labels).sum().item()
+        accuracy = true_preds / batch_size
+        top1.update(accuracy, batch_size)
+
     # Hints:
     # - Before filling this part, you should first complete the ZeroShotCLIP class
     # - Updating the accuracy meter is as simple as calling top1.update(accuracy, batch_size)
     # - You can use the model_inference method of the ZeroshotCLIP class to get the logits
-
-    # you can remove the following line once you have implemented the inference loop
-    raise NotImplementedError("Implement the inference loop")
 
     #######################
     # END OF YOUR CODE    #
