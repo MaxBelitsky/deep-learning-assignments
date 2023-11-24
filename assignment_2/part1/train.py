@@ -14,6 +14,7 @@
 # Date Created: 2022-11-14
 ################################################################################
 
+import os
 import argparse
 import numpy as np
 import torch
@@ -46,6 +47,9 @@ def set_seed(seed):
 
 
 def set_device():
+    """
+    Function for setting the device.
+    """
     if torch.cuda.is_available():
         device = torch.device('cuda')
     else:
@@ -57,6 +61,33 @@ def set_device():
     except:
         device = torch.device('cpu')
     return device
+
+
+def save_model(model, model_path):
+    """
+    Function for saving the model.
+    """
+    os.makedirs(model_path, exist_ok=True)
+    model_file = os.path.join(model_path, "model.tar")
+    torch.save(model.state_dict(), model_file)
+
+
+def load_model(model_path, num_classes=100):
+    """
+    Function for loading the model.
+    """
+    # Get the saved model file path
+    model_file = os.path.join(model_path, "model.tar")
+    if not os.path.isfile(model_file):
+        raise Exception(f"File {model_file} doesn't exist")
+    
+    # Initialize a new model instance
+    model = get_model(num_classes)
+
+    # Load the weights
+    model.load_state_dict(torch.load(model_file))
+    
+    return model
 
 
 def get_model(num_classes=100):
@@ -131,7 +162,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     # Training loop with validation after each epoch. Save the best model.
     train_losses, train_accuracies = [], []
     val_losses, val_accuracies = [], []
-    best_val_accuracy, best_model = 0, None
+    best_val_accuracy = 0
     for epoch in range(epochs):
         epoch_loss, epoch_accuracy = 0, 0
 
@@ -172,14 +203,15 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
         # Save the best model
         if val_accuracy > best_val_accuracy:
+            print("\t   New best performance, saving model...")
             best_val_accuracy = val_accuracy
-            # TODO: save the checkpoint
+            save_model(model, checkpoint_name)
         
         # Report the epoch info
-        print(f"Epoch: {epoch+1} | train loss: {train_losses[-1]} | train acc: {train_accuracies[-1]} | val acc: {val_accuracy}")
+        print(f"Epoch: {epoch+1:2d} | train loss: {train_losses[-1]:.5f} | train acc: {train_accuracies[-1]:.2f} | val acc: {val_accuracy:.2f}")
 
     # Load the best model on val accuracy and return it.
-    # pass
+    model = load_model(checkpoint_name).to(device)
 
     #######################
     # END OF YOUR CODE    #
@@ -224,7 +256,7 @@ def evaluate_model(model, data_loader, device):
     return accuracy
 
 
-def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise):
+def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, checkpoint_name):
     """
     Main function for training and testing the model.
 
@@ -253,15 +285,14 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise):
     # pass
 
     # Train the model
-    checkpoint_name = 'data/best_model'
     model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name)
 
     # Evaluate the model on the test set
-    test_dataset = get_test_set(data_dir)
+    test_dataset = get_test_set(data_dir, test_noise)
     test_dataloader = data.DataLoader(test_dataset, batch_size, shuffle=False, pin_memory=True)
     test_accuracy = evaluate_model(model, test_dataloader, device)
 
-    print(test_accuracy)
+    print(f"Test accuracy: {test_accuracy:.2f}")
 
     return test_accuracy
     #######################
@@ -288,6 +319,8 @@ if __name__ == '__main__':
                         help='Augmentation to use.')
     parser.add_argument('--test_noise', default=False, action="store_true",
                         help='Whether to test the model on noisy images or not.')
+    parser.add_argument('--checkpoint_name', default='models/best_model', type=str,
+                        help='The model checkpoint path.')
 
     args = parser.parse_args()
     kwargs = vars(args)
