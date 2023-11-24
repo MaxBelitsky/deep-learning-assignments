@@ -174,15 +174,16 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     val_accuracies = []
     best_val_accuracy, best_epoch = 0, 0
     for epoch in range(epochs):
-        epoch_loss = 0.
+        # epoch_loss = 0.
+        epoch_loss = []
 
         # Set model to training model
         model.train()
 
         true_predictions, count = 0., 0
 
-        t = tqdm(train_dataloader, leave=False)
-        for imgs, labels in t:
+        # t = tqdm(train_dataloader, leave=False)
+        for imgs, labels in train_dataloader:
             # Transfer data to device
             imgs, labels = imgs.to(device), labels.to(device)
 
@@ -191,7 +192,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
             # Compute loss
             loss = loss_module(logits, labels)
-            epoch_loss += loss.item()
+            epoch_loss.append(loss.item())
 
             # Backward pass
             optimizer.zero_grad()
@@ -205,7 +206,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
         # Add train metrics
         train_accuracies.append(true_predictions / count)
-        train_losses.append(epoch_loss / count)
+        train_losses.append(torch.tensor(epoch_loss).mean().item())
 
         # Evaluate the model
         val_accuracy = evaluate_model(model, val_dataloader, device)
