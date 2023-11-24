@@ -157,7 +157,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
     #######################
 
     # Load the datasets
-    train_dataset, val_dataset = get_train_validation_set(data_dir)
+    train_dataset, val_dataset = get_train_validation_set(data_dir, augmentation_name=augmentation_name)
 
     # Create dataloaders
     train_dataloader = data.DataLoader(train_dataset, batch_size, shuffle=True, pin_memory=True)
@@ -220,7 +220,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
             save_model(model, checkpoint_name)
         
         # Report the epoch info
-        print(f"Epoch: {epoch+1:2d} | train loss: {train_losses[-1]:.5f} | train acc: {train_accuracies[-1]:.2f} | val acc: {val_accuracy:.2f}")
+        print(f"Epoch: {epoch+1:2d} | train loss: {train_losses[-1]:.5f} | train acc: {train_accuracies[-1]:.5f} | val acc: {val_accuracy:.5f}")
 
     # Save training history
     results_dict = {
@@ -300,10 +300,6 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, 
 
     # Load the model
     model = get_model().to(device)
-
-    # Get the augmentation to use
-    # TODO: do this
-    # pass
 
     # Train the model
     model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name)

@@ -61,10 +61,14 @@ def add_augmentation(augmentation_name, transform_list):
     #######################
 
     # Create a new transformation based on the augmentation_name.
-    pass
+    if augmentation_name == "flip":
+        transform = transforms.RandomHorizontalFlip(p=0.5)
+    
+    if augmentation_name == "resize":
+        transform = transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.0), ratio=(0.9, 1.1))
 
-    # Add the new transformation to the list.
-    pass
+    # Add the new transformation to the list. Insert into the first position.
+    transform_list.insert(0, transform)
 
     #######################
     # END OF YOUR CODE    #
