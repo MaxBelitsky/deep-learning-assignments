@@ -16,6 +16,7 @@
 
 import os
 import argparse
+import json
 import numpy as np
 import torch
 import torch.nn as nn
@@ -126,6 +127,15 @@ def get_model(num_classes=100):
     return model
 
 
+def save_training_history(results_dict, checkpoint_name):
+    try:
+        results_file = os.path.join(checkpoint_name, "model_results.json")
+        with open(results_file, "w") as f:
+            json.dump(results_dict, f)
+    except Exception as e:
+        print(f"Training history is not saved. Details: {e}")
+
+
 def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name=None):
     """
     Trains a given model architecture for the specified hyperparameters.
@@ -161,15 +171,15 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
     # Training loop with validation after each epoch. Save the best model.
     train_losses, train_accuracies = [], []
-    val_losses, val_accuracies = [], []
-    best_val_accuracy = 0
+    val_accuracies = []
+    best_val_accuracy, best_epoch = 0, 0
     for epoch in range(epochs):
-        epoch_loss, epoch_accuracy = 0, 0
+        epoch_loss = 0.
 
         # Set model to training model
         model.train()
 
-        true_predictions, count = 0, 0
+        true_predictions, count = 0., 0
 
         t = tqdm(train_dataloader, leave=False)
         for imgs, labels in t:
@@ -181,7 +191,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
             # Compute loss
             loss = loss_module(logits, labels)
-            epoch_loss += loss.cpu().detach().numpy()
+            epoch_loss += loss.item()
 
             # Backward pass
             optimizer.zero_grad()
@@ -191,7 +201,7 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
             optimizer.step()
 
             count += labels.shape[0]
-            true_predictions += (logits.argmax(dim=-1) == labels).float().mean()
+            true_predictions += (logits.argmax(dim=-1) == labels).float().sum().item()
 
         # Add train metrics
         train_accuracies.append(true_predictions / count)
@@ -205,10 +215,20 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
         if val_accuracy > best_val_accuracy:
             print("\t   New best performance, saving model...")
             best_val_accuracy = val_accuracy
+            best_epoch = epoch
             save_model(model, checkpoint_name)
         
         # Report the epoch info
         print(f"Epoch: {epoch+1:2d} | train loss: {train_losses[-1]:.5f} | train acc: {train_accuracies[-1]:.2f} | val acc: {val_accuracy:.2f}")
+
+    # Save training history
+    results_dict = {
+        "train_loss": train_losses,
+        "train_accuracy": train_accuracies,
+        "val_accuracy": val_accuracies,
+        "best_model_epoch": best_epoch
+    }
+    save_training_history(results_dict, checkpoint_name)
 
     # Load the best model on val accuracy and return it.
     model = load_model(checkpoint_name).to(device)
