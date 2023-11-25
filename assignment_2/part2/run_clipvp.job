@@ -5,7 +5,7 @@
 #SBATCH --job-name=CLIPVP-CIFAR10
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
-#SBATCH --time=04:00:00
+#SBATCH --time=00:30:00
 #SBATCH --mem=32000M
 #SBATCH --output=job-outputs/slurm_output_%A.out
 
@@ -17,7 +17,7 @@ module load Anaconda3/2022.05
 source activate dl2023
 
 # Run 1: Visual prompting CLIP on CIFAR-10 with standard text prompt
-code_dir=./
+code_dir=./deep-learning-assignments/assignment_2/part2/
 
 # Standard constants
 arch="ViT-B/32"
@@ -26,25 +26,27 @@ epochs=20
 
 ## Set of experiments on CIFAR-10
 dataset="cifar10"
-root=/scratch/$USER
+root=$TMPDIR/clipvp
 mkdir -p $root
 
 datasets=(cifar10)
-methods=(fixed_patch)
+methods=("padding", "fixed_patch")
 prompt_sizes=(1)
 
-for dataset in "${datasets[@]}"; do
-    for i in "${!methods[@]}"; do
-        method=${methods[$i]}
-        prompt_size=${prompt_sizes[$i]}
-        echo "Running experiment on $dataset with $method and prompt size $prompt_size"
-        python $code_dir/main.py \
-            --dataset $dataset \
-            --arch $arch \
-            --text_prompt_template "$text_prompt_template" \
-            --epochs $epochs \
-            --method $method \
-            --prompt_size $prompt_size \
-            --root $root
-    done
-done
+srun python $code_dir/main.py --dataset $dataset --arch $arch  --text_prompt_template "$text_prompt_template" --epochs $epochs --method "padding" --prompt_size 1 --root $root
+
+# for dataset in "${datasets[@]}"; do
+#     for i in "${!methods[@]}"; do
+#         method=${methods[$i]}
+#         prompt_size=${prompt_sizes[$i]}
+#         echo "Running experiment on $dataset with $method and prompt size $prompt_size"
+#         python $code_dir/main.py \
+#             --dataset $dataset \
+#             --arch $arch \
+#             --text_prompt_template "$text_prompt_template" \
+#             --epochs $epochs \
+#             --method $method \
+#             --prompt_size $prompt_size \
+#             --root $root
+#     done
+# done
