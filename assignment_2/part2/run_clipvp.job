@@ -33,7 +33,7 @@ datasets=(cifar10)
 methods=("padding", "fixed_patch")
 prompt_sizes=(1)
 
-srun python $code_dir/main.py --dataset $dataset --arch $arch  --text_prompt_template "$text_prompt_template" --epochs $epochs --method "padding" --prompt_size 1 --root $root
+srun python $code_dir/main.py --dataset $dataset --arch $arch  --text_prompt_template "$text_prompt_template" --epochs $epochs --method "padding" --prompt_size 1 --root $root --print_freq 100
 
 # for dataset in "${datasets[@]}"; do
 #     for i in "${!methods[@]}"; do

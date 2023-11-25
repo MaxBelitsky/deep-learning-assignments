@@ -208,7 +208,7 @@ class Learner:
         num_batches_per_epoch = len(self.train_loader)
 
         end = time.time()
-        for i, (images, target) in enumerate(tqdm(self.train_loader)):
+        for i, (images, target) in enumerate(self.train_loader):
 
             # Measure data loading time
             data_time.update(time.time() - end)
@@ -298,9 +298,8 @@ class Learner:
 
                 images, target = images.to(self.device), target.to(self.device)
 
-                with torch.no_grad():
-                    output = self.clip(images)
-                    loss = self.criterion(output, target)
+                output = self.clip(images)
+                loss = self.criterion(output, target)
 
                 #######################
                 # END OF YOUR CODE    #
