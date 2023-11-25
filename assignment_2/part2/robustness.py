@@ -19,6 +19,7 @@ import os
 import argparse
 import torch
 from learner import Learner
+from utils import set_device
 
 
 def parse_option():
@@ -52,6 +53,8 @@ def parse_option():
     # model
     parser.add_argument("--model", type=str, default="clip")
     parser.add_argument("--arch", type=str, default="ViT-B/32")
+    parser.add_argument("--prompt_type", type=str, choices=["visual_prompt", "deep_prompt"], default="visual_prompt")
+    parser.add_argument("--injection_layer", type=int, default=0, help="id of transformer layer to inject prompt into")
     parser.add_argument(
         "--method",
         type=str,
@@ -128,7 +131,7 @@ def parse_option():
         args.trial,
     )
 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = set_device()
     args.model_folder = os.path.join(args.model_dir, args.filename)
     if not os.path.isdir(args.model_folder):
         os.makedirs(args.model_folder)
