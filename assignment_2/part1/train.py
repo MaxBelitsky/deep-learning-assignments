@@ -184,6 +184,9 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
 
         # t = tqdm(train_dataloader, leave=False)
         for imgs, labels in train_dataloader:
+            # Reset the gradients
+            optimizer.zero_grad()
+
             # Transfer data to device
             imgs, labels = imgs.to(device), labels.to(device)
 
@@ -195,7 +198,6 @@ def train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device
             epoch_loss.append(loss.item())
 
             # Backward pass
-            optimizer.zero_grad()
             loss.backward()
 
             # Update the parameters
