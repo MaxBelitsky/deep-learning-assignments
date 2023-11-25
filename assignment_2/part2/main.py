@@ -19,6 +19,7 @@ import os
 import argparse
 import torch
 from learner import Learner
+from utils import set_device
 
 
 def parse_option():
@@ -128,7 +129,7 @@ def parse_option():
         args.trial,
     )
 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = set_device()
     args.model_folder = os.path.join(args.model_dir, args.filename)
     if not os.path.isdir(args.model_folder):
         os.makedirs(args.model_folder)

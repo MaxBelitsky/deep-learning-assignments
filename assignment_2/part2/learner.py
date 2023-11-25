@@ -28,7 +28,7 @@ import time
 
 from tqdm import tqdm
 from vpt_model import VisualPromptCLIP
-from dpt_model import DeepPromptCLIP
+# from dpt_model import DeepPromptCLIP
 from utils import cosine_lr, AverageMeter, ProgressMeter, accuracy, save_checkpoint, set_seed
 from dataset import load_dataset, construct_dataloader
 
@@ -73,7 +73,12 @@ class Learner:
         # Note: You need to keep the visual/deep prompt's parameters trainable
         # Hint: Check for "prompt_learner" and "deep_prompt" in the parameters' names
 
-        raise NotImplementedError
+        for name, parameter in self.clip.named_parameters():
+            if "prompt_learner" in name or "deep_prompt" in name:
+                parameter.requires_grad = True
+            else:
+                parameter.requires_grad = False
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -216,17 +221,24 @@ class Learner:
             # PUT YOUR CODE HERE  #
             #######################
 
-            # TODO: Implement the training step for a single batch
+            # Reset the gradients
+            self.optimizer.zero_grad()
 
-            # Steps ( your usual training loop :) ):
-            # - Set the gradients to zero
-            # - Move the images/targets to the device
-            # - Perform a forward pass (using self.clip)
-            # - Compute the loss (using self.criterion)
-            # - Perform a backward pass
-            # - Update the parameters
+            # Move images/targets to device
+            images, target = images.to(self.device), target.to(self.device)
 
-            raise NotImplementedError
+            # Forward pass
+            output = self.clip(images)
+
+            # Compute the loss
+            loss = self.criterion(output, target)
+
+            # Backward pass
+            loss.backward()
+
+            # Update the parameters
+            self.optimizer.step()
+
             #######################
             # END OF YOUR CODE    #
             #######################
@@ -284,14 +296,12 @@ class Learner:
                 # PUT YOUR CODE HERE  #
                 #######################
 
-                # TODO: Implement the evaluation step for a single batch
+                images, target = images.to(self.device), target.to(self.device)
 
-                # Steps ( your usual evaluation loop :) ):
-                # - Move the images/targets to the device
-                # - Forward pass (using self.clip)
-                # - Compute the loss (using self.criterion)
+                with torch.no_grad():
+                    output = self.clip(images)
+                    loss = self.criterion(output, target)
 
-                raise NotImplementedError
                 #######################
                 # END OF YOUR CODE    #
                 #######################

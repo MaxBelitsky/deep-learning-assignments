@@ -34,7 +34,6 @@ class FixedPatchPrompter(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        # TODO: Define the prompt parameters here. The prompt is basically a
         # patch (can define as self.patch) of size [prompt_size, prompt_size]
         # that is placed at the top-left corner of the image.
 
@@ -45,7 +44,9 @@ class FixedPatchPrompter(nn.Module):
         # - You can define variable parameters using torch.nn.Parameter
         # - You can initialize the patch randomly in N(0, 1) using torch.randn
 
-        raise NotImplementedError
+        self.prompt_size = args.prompt_size
+        self.patch = nn.Parameter(torch.randn(1, 3, args.prompt_size, args.prompt_size, device=args.device), requires_grad=True)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -54,14 +55,16 @@ class FixedPatchPrompter(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        # TODO: For a given batch of images, place the patch at the top-left
 
         # Hints:
         # - First define the prompt. Then add it to the batch of images.
         # - It is always advisable to implement and then visualize if
         #   your prompter does what you expect it to do.
 
-        raise NotImplementedError
+        # x[:, :, :self.prompt_size, :self.prompt_size] = self.patch
+        x[:, :, :self.prompt_size, :self.prompt_size] = x[:, :, :self.prompt_size, :self.prompt_size] + self.patch
+
+        return x
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -80,7 +83,7 @@ class PadPrompter(nn.Module):
         # PUT YOUR CODE HERE  #
         #######################
 
-        # TODO: Define the padding as variables self.pad_left, self.pad_right, self.pad_up, self.pad_down
+        self.pad_size = pad_size
 
         # Hints:
         # - Each of these are parameters that we need to learn. So how would you define them in torch?
@@ -88,7 +91,12 @@ class PadPrompter(nn.Module):
         # - Shape of self.pad_up and self.pad_down should be (1, 3, pad_size, image_size)
         # - See Fig 2.(g)/(h) and think about the shape of self.pad_left and self.pad_right
 
-        raise NotImplementedError
+        # Define parameters
+        self.pad_up = nn.Parameter(torch.rand(1, 3, pad_size, image_size, device=args.device), requires_grad=True)
+        self.pad_down = nn.Parameter(torch.rand(1, 3, pad_size, image_size, device=args.device), requires_grad=True)
+        self.pad_left = nn.Parameter(torch.rand(1, 3, image_size - pad_size*2, pad_size, device=args.device), requires_grad=True)
+        self.pad_right = nn.Parameter(torch.rand(1, 3, image_size - pad_size*2, pad_size, device=args.device), requires_grad=True)
+        
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -104,7 +112,16 @@ class PadPrompter(nn.Module):
         # - It is always advisable to implement and then visualize if
         #   your prompter does what you expect it to do.
 
-        raise NotImplementedError
+        # Fill the horizontal parts
+        x[:, :, :self.pad_size, :] = x[:, :, :self.pad_size, :] + self.pad_up
+        x[:, :, -self.pad_size:, :] = x[:, :, -self.pad_size:, :] + self.pad_down
+
+        # Fill the vertical parts
+        x[:, :, self.pad_size:-self.pad_size, :self.pad_size] = x[:, :, self.pad_size:-self.pad_size, :self.pad_size] + self.pad_left
+        x[:, :, self.pad_size:-self.pad_size, -self.pad_size:] = x[:, :, self.pad_size:-self.pad_size, -self.pad_size:] + self.pad_left
+
+        return x
+
         #######################
         # END OF YOUR CODE    #
         #######################
