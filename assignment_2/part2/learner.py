@@ -290,7 +290,7 @@ class Learner:
 
         with torch.no_grad():
             end = time.time()
-            for i, (images, target) in enumerate(tqdm(loader)):
+            for i, (images, target) in enumerate(loader):
 
                 #######################
                 # PUT YOUR CODE HERE  #
