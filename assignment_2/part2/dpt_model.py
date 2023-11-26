@@ -160,7 +160,7 @@ class DeepPromptCLIP(nn.Module):
         # add a deep prompt
         for i, residual_block in enumerate(image_encoder.transformer.resblocks):
             if i == self.injection_layer:
-                x = torch.cat([self.deep_prompt[None, :, :].repeat(1, x.shape[1], 1), x], dim=0) # TODO: add comments
+                x = torch.cat([self.deep_prompt[None, :, :].repeat(1, x.shape[1], 1).type(x.dtype), x], dim=0) # TODO: add comments
                 x = residual_block(x)
             else:
                 x = residual_block(x)
