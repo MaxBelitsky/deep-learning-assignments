@@ -257,8 +257,8 @@ class Learner:
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % self.args.print_freq == 0:
-                progress.display(i)
+            # if i % self.args.print_freq == 0:
+            #     progress.display(i)
 
             if i % self.args.save_freq == 0:
                 save_checkpoint(
@@ -314,8 +314,8 @@ class Learner:
                 batch_time.update(time.time() - end)
                 end = time.time()
 
-                if i % self.args.print_freq == 0:
-                    progress.display(i)
+                # if i % self.args.print_freq == 0:
+                #     progress.display(i)
 
             print(
                 " * Prompt Acc@1 on {split} {top1_prompt.avg:.3f}".format(split=split, top1_prompt=top1_prompt)
