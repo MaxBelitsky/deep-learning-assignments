@@ -318,7 +318,7 @@ class Learner:
                     progress.display(i)
 
             print(
-                " * Prompt Acc@1 {top1_prompt.avg:.3f}".format(top1_prompt=top1_prompt)
+                " * Prompt Acc@1 on {split} {top1_prompt.avg:.3f}".format(split=split, top1_prompt=top1_prompt)
             )
 
         return top1_prompt.avg
