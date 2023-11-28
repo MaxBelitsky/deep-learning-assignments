@@ -86,11 +86,15 @@ class DeepPromptCLIP(nn.Module):
         #######################
 
         # TODO: Initialize the learnable deep prompt.
-        # Hint: consider the shape required for the deep prompt to be compatible with the CLIP model 
+        # Hint: consider the shape required for the deep prompt to be compatible with the CLIP model
+        # Hint: CLIP uses different datatypes for CPU (float32) and GPU (float16)
+        # Hint: use args.prompt_num to specify the number of deep prompts to use
 
         # The transformer width: patch size squared * n_channels. So for a 16x16 patch the width will be 768
         width = clip_model.visual.transformer.width
-        self.deep_prompt = nn.Parameter(torch.randn(1, width, device=args.device), requires_grad=True)
+        # The resblocks accept the input with shape (n_inputs, batch_size, transformer_width)
+        # So initialize the deep prompt with (n_prompts, batch_size, transformer_width)
+        self.deep_prompt = nn.Parameter(torch.randn((args.prompt_num, 1, width), device=args.device), requires_grad=True).type(self.clip_model.dtype)
 
         #######################
         # END OF YOUR CODE    #
@@ -160,7 +164,10 @@ class DeepPromptCLIP(nn.Module):
         # add a deep prompt
         for i, residual_block in enumerate(image_encoder.transformer.resblocks):
             if i == self.injection_layer:
-                x = torch.cat([self.deep_prompt[None, :, :].repeat(1, x.shape[1], 1).type(x.dtype), x], dim=0) # TODO: add comments
+                # Repeat the prompt batch_size times (the second axis) to get (n_prompts, batch_size, width)
+                repeated_prompt = self.deep_prompt.repeat(1, x.shape[1], 1)#.type(x.dtype)
+                # Concatenate along the input axis
+                x = torch.cat([repeated_prompt, x], dim=0)
                 x = residual_block(x)
             else:
                 x = residual_block(x)
