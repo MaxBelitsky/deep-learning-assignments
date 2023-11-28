@@ -32,7 +32,7 @@ mkdir -p $root
 datasets=("cifar10" "cifar100")
 
 for dataset in "${datasets[@]}"; do
-    echo "Running experiment on $dataset with $method and prompt size $prompt_size and prompt type $prompt_type"
+    echo "Running experiment on $dataset"
     srun python $code_dir/main.py --dataset $dataset --arch $arch --text_prompt_template "$text_prompt_template" --epochs $epochs --root $root --print_freq 400 --prompt_type "deep_prompt"
     echo "------------------------------------------------------------------------"
 done
