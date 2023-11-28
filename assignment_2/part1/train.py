@@ -25,7 +25,7 @@ import torch.utils.data as data
 import torchvision.models as models
 from tqdm.auto import tqdm
 
-from cifar100_utils import get_train_validation_set, get_test_set
+from cifar100_utils import get_train_validation_set, get_test_set, set_dataset
 
 
 def set_seed(seed):
@@ -334,6 +334,8 @@ if __name__ == '__main__':
                         help='Seed to use for reproducing results')
     parser.add_argument('--data_dir', default='data/', type=str,
                         help='Data directory where to store/find the CIFAR100 dataset.')
+    parser.add_argument('--dataset', default='cifar100', type=str, choices=['cifar100', 'cifar10'],
+                        help='Dataset to use.')
     parser.add_argument('--augmentation_name', default=None, type=str,
                         help='Augmentation to use.')
     parser.add_argument('--test_noise', default=False, action="store_true",
@@ -343,5 +345,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     kwargs = vars(args)
+    set_dataset(kwargs.pop('dataset'))
     print(f"Training the model with the following configuration\n:{kwargs}")
     main(**kwargs)
