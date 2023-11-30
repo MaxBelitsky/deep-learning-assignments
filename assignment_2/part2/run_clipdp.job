@@ -30,7 +30,7 @@ root=$TMPDIR/clipdp
 mkdir -p $root
 
 datasets=("cifar10" "cifar100")
-injection_layers=(0, 1, 4)
+injection_layers=(0 1 4)
 
 for dataset in "${datasets[@]}"; do
     for injection_layer in "${injection_layers[@]}"; do
