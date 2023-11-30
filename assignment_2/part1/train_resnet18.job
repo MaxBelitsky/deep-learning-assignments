@@ -23,7 +23,7 @@ echo "Running experiment without the augmentation"
 srun python train.py --checkpoint_name $TMPDIR/models/fine-tuned-resnet18 --data_dir $TMPDIR/data/
 
 # Run the script
-augmentations=("flip", "resize")
+augmentations=("flip" "resize")
 
 for augmentation in "${augmentations[@]}"; do
     echo "Running experiment with the augmentation: $augmentation"

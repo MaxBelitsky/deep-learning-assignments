@@ -2,7 +2,7 @@
 
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
-#SBATCH --job-name=CLIPVP-CIFAR10
+#SBATCH --job-name=CLIPDP-CIFAR10
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
 #SBATCH --time=02:00:00
