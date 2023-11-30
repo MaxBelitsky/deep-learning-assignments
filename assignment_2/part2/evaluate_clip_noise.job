@@ -23,7 +23,8 @@ code_dir=./deep-learning-assignments/assignment_2/part2/
 
 splits=("test" "train")
 datasets=("cifar10" "cifar100")
-checkpoint="padding_30_cifar10_clip_ViT-B"
+model_dir=./save/models
+checkpoint=$model_dir/padding_30_cifar10_clip_ViT-B
 
 # Run standard zero-shot classification
 for dataset in "${datasets[@]}"; do
