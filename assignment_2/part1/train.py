@@ -311,7 +311,7 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, 
     test_dataloader = data.DataLoader(test_dataset, batch_size, shuffle=False, pin_memory=True)
     test_accuracy = evaluate_model(model, test_dataloader, device)
 
-    print(f"Test accuracy: {test_accuracy:.2f}")
+    print(f"Test accuracy: {test_accuracy:.5f}")
 
     return test_accuracy
     #######################

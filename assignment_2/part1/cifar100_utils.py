@@ -76,15 +76,18 @@ def add_augmentation(augmentation_name, transform_list):
     # PUT YOUR CODE HERE  #
     #######################
 
+    aug_transform = None
     # Create a new transformation based on the augmentation_name.
     if augmentation_name == "flip":
-        transform = transforms.RandomHorizontalFlip(p=0.5)
+        aug_transform = transforms.RandomHorizontalFlip(p=0.5)
     
     if augmentation_name == "resize":
-        transform = transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.0), ratio=(0.9, 1.1))
+        aug_transform = transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.0), ratio=(0.9, 1.1))
 
     # Add the new transformation to the list. Insert into the first position.
-    transform_list.insert(0, transform)
+    if aug_transform:
+        print(f"Adding an augmentation: {augmentation_name}")
+        transform_list.insert(0, aug_transform)
 
     #######################
     # END OF YOUR CODE    #
