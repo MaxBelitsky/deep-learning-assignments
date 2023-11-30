@@ -22,7 +22,7 @@ from learner import Learner
 from clip import clip
 from dataset import load_dataset, construct_dataloader
 from pprint import pprint
-from utils import DummyArgs
+from utils import DummyArgs, set_device, set_seed
 
 
 def parse_option():
@@ -121,7 +121,9 @@ def parse_option():
 
     args = parser.parse_args()
 
-    args.filename = "{}_{}_{}_{}_{}_{}_lr_{}_decay_{}_bsz_{}_warmup_{}_trial_{}".format(
+    args.filename = "{}_{}_{}_{}_{}_{}_{}_{}_lr_{}_decay_{}_bsz_{}_warmup_{}_trial_{}".format(
+        args.prompt_type,
+        args.prompt_num,
         args.method,
         args.prompt_size,
         args.dataset,
@@ -135,7 +137,7 @@ def parse_option():
         args.trial,
     )
 
-    args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    args.device = set_device()
     args.model_folder = os.path.join(args.model_dir, args.filename)
     if not os.path.isdir(args.model_folder):
         os.makedirs(args.model_folder)
@@ -178,13 +180,11 @@ def main():
         # PUT YOUR CODE HERE  #
         #######################
         # TODO: Define `classnames` as a list of 10 + 100 class labels from CIFAR10 and CIFAR100
+        classnames = cifar10_test.classes + cifar100_test.classes
 
-        raise NotImplementedError
         #######################
         # END OF YOUR CODE    #
         #######################
-
-        classnames = cifar10_test.classes + cifar100_test.classes
 
         # 5. Load the clip model
         print(f"Loading CLIP (backbone: {args.arch})")
@@ -207,7 +207,16 @@ def main():
         # TODO: Compute the text features (for each of the prompts defined above) using CLIP
         # Note: This is similar to the code you wrote in `clipzs.py`
 
-        raise NotImplementedError
+        # Tokenize each text prompt using CLIP's tokenizer
+        tokenized_text = torch.cat([clip.tokenize(p) for p in prompts]).to(args.device)
+
+        # Compute the text features (encodings) for each prompt.
+        with torch.no_grad():
+            text_features = clip_model.encode_text(tokenized_text)
+
+        # Normalize the text features.
+        text_features /= text_features.norm(dim=-1, keepdim=True)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -223,7 +232,8 @@ def main():
         # That is, if a class in CIFAR100 corresponded to '4', it should now correspond to '14'
         # Set the result of this to the attribute cifar100_test.targets to override them
 
-        raise NotImplementedError
+        cifar100_test.targets = [t + 10 for t in cifar100_test.targets]
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -253,10 +263,12 @@ def main():
         # TODO: Compute the weighted average of the above two accuracies
 
         # Hint:
-        # - accurary_all = acc_cifar10 * (% of cifar10 samples) \
+        # - accuracy_all = acc_cifar10 * (% of cifar10 samples) \
         #                  + acc_cifar100 * (% of cifar100 samples)
 
-        raise NotImplementedError
+        total_samples = len(cifar10_test) + len(cifar100_test)
+        accuracy_all = acc_cifar10 * len(cifar10_test)/total_samples + acc_cifar100 * len(cifar100_test)/total_samples
+
         #######################
         # END OF YOUR CODE    #
         #######################
