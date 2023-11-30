@@ -33,13 +33,11 @@ datasets=("cifar10" "cifar100")
 methods=("padding" "fixed_patch")
 prompt_sizes=(30 1)
 
-# srun python $code_dir/main.py --dataset $dataset --arch $arch  --text_prompt_template "$text_prompt_template" --epochs $epochs --method "padding" --prompt_size 1 --root $root --print_freq 100
-
 for dataset in "${datasets[@]}"; do
     for i in "${!methods[@]}"; do
         method=${methods[$i]}
         prompt_size=${prompt_sizes[$i]}
-        echo "Running experiment on $dataset with $method and prompt size $prompt_size and prompt type $prompt_type"
+        echo "Running experiment on $dataset with $method and prompt size $prompt_size"
         srun python $code_dir/main.py --dataset $dataset --arch $arch --text_prompt_template "$text_prompt_template" --epochs $epochs --method $method --prompt_size $prompt_size --root $root --print_freq 400
         echo "------------------------------------------------------------------------"
     done
