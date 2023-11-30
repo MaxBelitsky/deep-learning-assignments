@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=3
 #SBATCH --time=01:00:00
 #SBATCH --mem=32000M
-#SBATCH --output=job-outputs/slurm_output_%A.out
+#SBATCH --output=job-outputs/clip_robustness_%A.out
 
 module purge
 module load 2022
@@ -28,5 +28,5 @@ checkpoint="padding_30_cifar10_clip_ViT-B"
 # Run standard zero-shot classification
 for dataset in "${datasets[@]}"; do
     echo "Evaluating the robustness on $dataset using checkpoint $checkpoint"
-    srun python robustness.py --evaluate --dataset $dataset --test_noise --resume $checkpoint
+    srun python $code_dir/robustness.py --evaluate --dataset $dataset --test_noise --resume $checkpoint
 done
