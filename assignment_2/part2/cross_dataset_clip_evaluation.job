@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gpus=1
+#SBATCH --job-name=CLIP-EVAL-CROSS-DATASET
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --time=01:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=job-outputs/clip_cross_dataset_%A.out
+
+module purge
+module load 2022
+module load Anaconda3/2022.05
+
+# activate the environment
+source activate dl2023
+
+root=$TMPDIR/robustness
+mkdir -p $root
+
+code_dir=./deep-learning-assignments/assignment_2/part2/
+
+datasets=("cifar10" "cifar100")
+model_dir=./save/models
+
+# Run standard zero-shot classification
+for dataset in "${datasets[@]}"; do
+
+    patch_checkpoint="$model_dir/visual_prompt_0_fixed_patch_1_${dataset}_clip_ViT-B/32_sgd_lr_40_decay_0_bsz_128_warmup_1000_trial_1/model_best.pth.tar"
+    padding_checkpoint="$model_dir/visual_prompt_0_padding_30_${dataset}_clip_ViT-B/32_sgd_lr_40_decay_0_bsz_128_warmup_1000_trial_1/model_best.pth.tar"
+    deep_checkpint="$model_dir/deep_prompt_0_padding_30_${dataset}_clip_ViT-B/32_sgd_lr_40_decay_0_bsz_128_warmup_1000_trial_1/model_best.pth.tar"
+
+    echo "Evaluating the cross_dataset on $dataset using checkpoint $patch_checkpoint"
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "fixed_patch" --prompt_size "1" --evaluate --test_noise --resume $patch_checkpoint
+
+    echo "--------------------------------------------------------------------------"
+
+    echo "Evaluating the cross_dataset on $dataset using checkpoint $padding_checkpoint"
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "padding" --prompt_size "30" --evaluate --test_noise --resume $padding_checkpoint
+
+    echo "--------------------------------------------------------------------------"
+
+    echo "Evaluating the cross_dataset on $dataset using checkpoint $deep_checkpint"
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "deep_prompt" --prompt_num 4 --injection_layer 0 --evaluate --test_noise --resume $deep_checkpint
+
+    echo "--------------------------------------------------------------------------"
+    echo "--------------------------------------------------------------------------"
+    echo "--------------------------------------------------------------------------"
+
+done
