@@ -118,7 +118,9 @@ def parse_option():
 
     args = parser.parse_args()
 
-    args.filename = "{}_{}_{}_{}_{}_{}_lr_{}_decay_{}_bsz_{}_warmup_{}_trial_{}".format(
+    args.filename = "{}_{}_{}_{}_{}_{}_{}_{}_lr_{}_decay_{}_bsz_{}_warmup_{}_trial_{}".format(
+        args.prompt_type,
+        args.prompt_num,
         args.method,
         args.prompt_size,
         args.dataset,
