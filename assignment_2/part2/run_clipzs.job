@@ -19,7 +19,7 @@ source activate dl2023
 root=$TMPDIR/clipzs
 mkdir -p $root
 
-code_dir=./
+code_dir=./deep-learning-assignments/assignment_2/part2/
 
 splits=("test" "train")
 datasets=("cifar10" "cifar100")
