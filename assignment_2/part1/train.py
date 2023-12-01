@@ -279,7 +279,7 @@ def evaluate_model(model, data_loader, device):
     return accuracy
 
 
-def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, checkpoint_name):
+def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, checkpoint_name, evaluate):
     """
     Main function for training and testing the model.
 
@@ -300,11 +300,15 @@ def main(lr, batch_size, epochs, data_dir, seed, augmentation_name, test_noise, 
     # Set the device to use for training
     device = set_device()
 
-    # Load the model
-    model = get_model().to(device)
+    # Evaluate
+    if evaluate:
+        model = load_model(checkpoint_name).to(device)
+    else:
+        # Load the model
+        model = get_model().to(device)
 
-    # Train the model
-    model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name)
+        # Train the model
+        model = train_model(model, lr, batch_size, epochs, data_dir, checkpoint_name, device, augmentation_name)
 
     # Evaluate the model on the test set
     test_dataset = get_test_set(data_dir, test_noise)
@@ -342,6 +346,9 @@ if __name__ == '__main__':
                         help='Whether to test the model on noisy images or not.')
     parser.add_argument('--checkpoint_name', default='models/best_model', type=str,
                         help='The model checkpoint path.')
+    parser.add_argument(
+        "--evaluate", default=False, action="store_true", help="evaluate model test set"
+    )
 
     args = parser.parse_args()
     kwargs = vars(args)

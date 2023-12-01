@@ -78,16 +78,21 @@ def add_augmentation(augmentation_name, transform_list):
 
     aug_transform = None
     # Create a new transformation based on the augmentation_name.
+    insert_index = 0
     if augmentation_name == "flip":
         aug_transform = transforms.RandomHorizontalFlip(p=0.5)
     
     if augmentation_name == "resize":
         aug_transform = transforms.RandomResizedCrop((32, 32), scale=(0.8, 1.0), ratio=(0.9, 1.1))
 
+    if augmentation_name == "test_noise":
+        aug_transform = AddGaussianNoise()
+        insert_index = len(transform_list)
+
     # Add the new transformation to the list. Insert into the first position.
     if aug_transform:
         print(f"Adding an augmentation: {augmentation_name}")
-        transform_list.insert(0, aug_transform)
+        transform_list.insert(insert_index, aug_transform)
 
     #######################
     # END OF YOUR CODE    #
