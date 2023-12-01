@@ -32,17 +32,17 @@ for dataset in "${datasets[@]}"; do
     deep_checkpint="$model_dir/deep_prompt_0_padding_30_${dataset}_clip_ViT-B/32_sgd_lr_40_decay_0_bsz_128_warmup_1000_trial_1/model_best.pth.tar"
 
     echo "Evaluating the cross_dataset on $dataset using checkpoint $patch_checkpoint"
-    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "fixed_patch" --prompt_size "1" --evaluate --test_noise --resume $patch_checkpoint
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "fixed_patch" --prompt_size "1" --evaluate --resume $patch_checkpoint
 
     echo "--------------------------------------------------------------------------"
 
     echo "Evaluating the cross_dataset on $dataset using checkpoint $padding_checkpoint"
-    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "padding" --prompt_size "30" --evaluate --test_noise --resume $padding_checkpoint
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "visual_prompt" --method "padding" --prompt_size "30" --evaluate --resume $padding_checkpoint
 
     echo "--------------------------------------------------------------------------"
 
     echo "Evaluating the cross_dataset on $dataset using checkpoint $deep_checkpint"
-    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "deep_prompt" --prompt_num 4 --injection_layer 0 --evaluate --test_noise --resume $deep_checkpint
+    srun python $code_dir/cross_dataset.py --root $root --dataset $dataset --prompt_type "deep_prompt" --prompt_num 4 --injection_layer 0 --evaluate --resume $deep_checkpint
 
     echo "--------------------------------------------------------------------------"
     echo "--------------------------------------------------------------------------"
