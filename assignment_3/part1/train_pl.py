@@ -97,8 +97,9 @@ class VAE(pl.LightningModule):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        x_samples = None
-        raise NotImplementedError
+
+        x_samples = self.decoder(torch.normal(0, 1, (batch_size, self.hparams.z_dim)))
+
         #######################
         # END OF YOUR CODE    #
         #######################
