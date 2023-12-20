@@ -100,8 +100,19 @@ def train_aae(epoch, model, train_loader,
         #######################
         # PUT YOUR CODE HERE  #
         #######################
+
         # Encoder-Decoder update
-        raise NotImplementedError
+        recon_x, z = model(x)
+        ae_loss, ae_log_dict = model.get_loss_autoencoder(x, recon_x, z, lambda_)
+
+        # Update AE weights
+        optimizer_ae.zero_grad()
+        ae_loss.backward()
+        optimizer_ae.step()
+
+        # Add values to the logger
+        logger_ae.add_values(ae_log_dict)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -109,12 +120,23 @@ def train_aae(epoch, model, train_loader,
         #######################
         # PUT YOUR CODE HERE  #
         #######################
+
         # Discriminator update
-        raise NotImplementedError
+        recon_x, z = model(x)
+        d_loss, d_log_dict = model.get_loss_discriminator(z)
+
+        # Update discriminator weigths
+        optimizer_disc.zero_grad()
+        d_loss.backward()
+        optimizer_disc.step()
+
+        # Add values to the logger
+        logger_disc.add_values(d_log_dict)
+
         #######################
         # END OF YOUR CODE    #
         #######################
-        train_loss += disc_loss.item() + ae_loss.item()
+        train_loss += d_loss.item() + ae_loss.item()
 
         if (epoch <= 1 or epoch % 5 == 0) and batch_idx == 0:
             save_reconstruction(model, epoch, logger_ae.summary_writer, x)
@@ -155,8 +177,11 @@ def main(args):
                          batch_size=args.batch_size,
                          num_workers=args.num_workers)
 
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
-    device = torch.device("cuda:0" if args.cuda else "cpu")
+    args.cuda = not args.no_cuda
+    if args.no_cuda:
+        device = "cpu"
+    else:
+        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     # Create model
     model = AdversarialAE(z_dim=args.z_dim)
@@ -168,9 +193,11 @@ def main(args):
     #######################
     # You can use the Adam optimizer for autoencoder and SGD for discriminator.
     # It is recommended to reduce the momentum (beta1) to e.g. 0.5 for Adam optimizer.
-    optimizer_ae = None
-    optimizer_disc = None
-    raise NotImplementedError
+
+    ae_parameters = list(model.encoder.parameters()) + list(model.decoder.parameters())
+    optimizer_ae = optim.Adam(ae_parameters, lr=args.ae_lr, betas=(0.5, 0.999))
+    optimizer_disc = optim.SGD(model.discriminator.parameters(), lr=args.d_lr, momentum=0.9)
+
     #######################
     # END OF YOUR CODE    #
     #######################
