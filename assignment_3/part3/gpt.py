@@ -87,6 +87,7 @@ class CausalSelfAttention(nn.Module):
         # - Mask the calculated attention weights with the mask parameter.
         # - Apply dropout to the weigths
         # - Apply attention to the values (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+
         #######################
         # PUT YOUR CODE HERE  #
         #######################
@@ -96,10 +97,11 @@ class CausalSelfAttention(nn.Module):
         head_dim = n_embd // self.n_head
         
         attn = q @ k.transpose(2,3)
-        attn_scaled = attn / torch.sqrt(head_dim)
+        attn_scaled = attn / math.sqrt(head_dim)
+    
         # - Mask the calculated attention weights with the mask parameter.
-        attn_masked = attn_scaled.masked_fill(self.mask==0, -1e15)
-        attn_soft = torch.softmax(att_masked, dim=-1)
+        attn_masked = attn_scaled.masked_fill(self.mask[:, :, :seq_len, :seq_len] == 0, -1e15)
+        attn_soft = torch.softmax(attn_masked, dim=-1)
         
         # - Apply dropout to the weigths
         attn_dropped = self.attn_dropout(attn_soft)
@@ -399,41 +401,46 @@ class GPT(nn.Module):
             # if the sequence context is growing too long we must crop it at block_size
             idx_cond = idx if idx.size(1) <= self.block_size else idx[:, -self.block_size:]
             
-            # - forward the model to get the logits for the index in the sequence
-            # - pluck the logits at the final step and scale by desired temperature
-            # - optionally only consider top-k logits for sampling. 
-            # - apply softmax to convert logits to (normalized) probabilities
-            # - either sample from the distribution or take the most likely element
-            # - append sampled index to the running sequence and continue
+           
             #######################
             # PUT YOUR CODE HERE  #
             #######################
-            
             # - forward the model to get the logits for the index in the sequence
             y = self.forward(idx_cond)            
             
             # - pluck the logits at the final step and scale by desired temperature
-            y_scaled = y * temperature # or divide? 
+            y_scaled = y[:, -1, :] / temperature 
             
             # - optionally only consider top-k logits for sampling.
             if top_k: 
-                y_scaled = y_scaled # TODO: do this later!!
-
-            # - apply softmax to convert logits to (normalized) probabilities
-            y_soft = torch.softmax(y_scaled, -1) # -1 needs to be verified
-        
-            # - either sample from the distribution or take the most likely element
-            if do_sample:
-                pass
-            else: 
-                next_idx = torch.argmax(y_soft, -1)
+                top_vals, top_idxs = torch.topk(y_scaled, top_k)
                 
-            # - append sampled index to the running sequence and continue
-            idx = idx.cat(next_idx, -1)
+                # - apply softmax to convert logits to (normalized) probabilities
+                top_vals_soft = torch.softmax(top_vals, -1) 
 
-            #######################
+                # - either sample from the distribution or take the most likely element
+                if do_sample:
+                    next_idx = torch.multinomial(top_vals_soft, num_samples=1)
+                    next_idx = torch.gather(top_idxs, dim=-1, index=next_idx)
+                else: 
+                    next_idx = top_idxs[:, 0].unsqueeze(-1)
+                    
+            else: 
+                # - apply softmax to convert logits to (normalized) probabilities
+                y_soft = torch.softmax(y_scaled, -1)
+
+                # - either sample from the distribution or take the most likely element
+                if do_sample:
+                    next_idx = torch.multinomial(y_soft, num_samples=1)
+                else: 
+                    next_idx = torch.argmax(y_soft, -1).unsqueeze(-1)
+
+            # - append sampled index to the running sequence and continue
+            idx = torch.cat((idx, next_idx), dim=-1)
+            
+            
+            #######################            
             # END OF YOUR CODE    #
             #######################
 
         return idx
-    
