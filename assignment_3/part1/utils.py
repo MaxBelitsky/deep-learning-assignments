@@ -36,8 +36,7 @@ def sample_reparameterize(mean, std):
     # PUT YOUR CODE HERE  #
     #######################
 
-    # epsilon = torch.randn(mean.shape)
-    z = mean + torch.randn(mean.shape)*std
+    z = mean + torch.randn(std.shape, device=std.device)*std
 
     #######################
     # END OF YOUR CODE    #
@@ -111,14 +110,14 @@ def visualize_manifold(decoder, grid_size=20):
     # - You can use torchvision's function "make_grid" to combine the grid_size**2 images into a grid
     # - Remember to apply a softmax after the decoder
 
-    #######################
-    # PUT YOUR CODE HERE  #
-    #######################
-    img_grid = None
-    raise NotImplementedError
-    #######################
-    # END OF YOUR CODE    #
-    #######################
+    percentiles = torch.arange(1/2 / grid_size, (grid_size + 1/2) / grid_size, 1 / grid_size)
+    grid = torch.stack(torch.meshgrid (percentiles, percentiles), dim=-1)
+    z_values = torch.distributions.normal.Normal(torch.zeros(2), torch.ones(2)).icdf(grid).flatten(0, 1)
+    images = torch.nn.functional.softmax(decoder (z_values), dim=1)
+
+    img_grid = make_grid(images, nrow=grid_size)
+    img_grid = img_grid * torch.arange(0, 16, 1, device=images.device).float().unsqueeze(-1).unsqueeze(-1)
+    img_grid = img_grid.sum(dim=0) / 16
 
     return img_grid
 
