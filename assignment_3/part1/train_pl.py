@@ -72,11 +72,11 @@ class VAE(pl.LightningModule):
         #######################
 
         mean, log_std = self.encoder(imgs)
-        z = sample_reparameterize(mean, log_std)
+        z = sample_reparameterize(mean, log_std.exp())
         reconstructed_imgs = self.decoder(z)
 
-        L_rec = torch.nn.functional.cross_entropy(reconstructed_imgs.flatten(2, 3), imgs.flatten(1, 3), reduction='sum') / imgs.shape[0]
-        L_reg = KLD(mean, log_std).sum()
+        L_rec = torch.nn.functional.cross_entropy(reconstructed_imgs, imgs.squeeze(), reduction='sum') / imgs.shape[0]
+        L_reg = KLD(mean, log_std).mean()
         elbo = L_rec + L_reg
         bpd = elbo_to_bpd(elbo, imgs.shape)
 
@@ -99,7 +99,7 @@ class VAE(pl.LightningModule):
         #######################
 
         x_samples = self.decoder(torch.randn((batch_size, self.hparams.z_dim)).to(self.device))
-        x_samples = x_samples.argmax(axis=1, keepdim=True)
+        x_samples = x_samples.argmax(dim=1, keepdim=True)
 
         #######################
         # END OF YOUR CODE    #
@@ -117,7 +117,7 @@ class VAE(pl.LightningModule):
         self.log("train_reconstruction_loss", L_rec, on_step=False, on_epoch=True)
         self.log("train_regularization_loss", L_reg, on_step=False, on_epoch=True)
         self.log("train_ELBO", L_rec + L_reg, on_step=False, on_epoch=True)
-        self.log("train_bpd", bpd, on_step=False, on_epoch=True)
+        self.log("train_bpd", bpd, on_step=False, on_epoch=True, prog_bar=True)
 
         return bpd
 
@@ -127,7 +127,7 @@ class VAE(pl.LightningModule):
         self.log("val_reconstruction_loss", L_rec)
         self.log("val_regularization_loss", L_reg)
         self.log("val_ELBO", L_rec + L_reg)
-        self.log("val_bpd", bpd)
+        self.log("val_bpd", bpd, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         # Make use of the forward function, and add logging statements
