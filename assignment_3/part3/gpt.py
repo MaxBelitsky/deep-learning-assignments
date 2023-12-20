@@ -90,7 +90,23 @@ class CausalSelfAttention(nn.Module):
         #######################
         # PUT YOUR CODE HERE  #
         #######################
-        raise NotImplementedError
+        
+        # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
+        # - Calculate attention weights using key and queries
+        head_dim = n_embd // self.n_head
+        
+        attn = q @ k.transpose(2,3)
+        attn_scaled = attn / torch.sqrt(head_dim)
+        # - Mask the calculated attention weights with the mask parameter.
+        attn_masked = attn_scaled.masked_fill(self.mask==0, -1e15)
+        attn_soft = torch.softmax(att_masked, dim=-1)
+        
+        # - Apply dropout to the weigths
+        attn_dropped = self.attn_dropout(attn_soft)
+        
+        # - Apply attention to the values (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)        
+        y = torch.matmul(attn_dropped, v)
+
         #######################
         # END OF YOUR CODE    #
         #######################
@@ -392,7 +408,29 @@ class GPT(nn.Module):
             #######################
             # PUT YOUR CODE HERE  #
             #######################
-            raise NotImplementedError
+            
+            # - forward the model to get the logits for the index in the sequence
+            y = self.forward(idx_cond)            
+            
+            # - pluck the logits at the final step and scale by desired temperature
+            y_scaled = y * temperature # or divide? 
+            
+            # - optionally only consider top-k logits for sampling.
+            if top_k: 
+                y_scaled = y_scaled # TODO: do this later!!
+
+            # - apply softmax to convert logits to (normalized) probabilities
+            y_soft = torch.softmax(y_scaled, -1) # -1 needs to be verified
+        
+            # - either sample from the distribution or take the most likely element
+            if do_sample:
+                pass
+            else: 
+                next_idx = torch.argmax(y_soft, -1)
+                
+            # - append sampled index to the running sequence and continue
+            idx = idx.cat(next_idx, -1)
+
             #######################
             # END OF YOUR CODE    #
             #######################
