@@ -1,3 +1,5 @@
+# Deep Learning 1 Assignments
+
 Practical assignments for the Deep Learning 1 course at the University of Amsterdam.
 
 The assignments include:
